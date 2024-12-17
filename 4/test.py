@@ -1,55 +1,49 @@
-from main import execute_arithmetic_command, parse_mem, Command, OP_MULTIPLY, OP_DO, OP_DONT, execute_control_command, execute_commands
+from main import find_neighbors, find_word, find_x_mas
 
 import unittest
 
 class Test(unittest.TestCase): 
 	
-	def test_parse_meme(self): 
-		self.assertEqual([], parse_mem(""))
-		self.assertEqual([], parse_mem("23fahd7f723489"))
-		self.assertEqual([], parse_mem("mul(a,1)"))
-		self.assertEqual([], parse_mem("mul(1,3!"))
-		self.assertEqual([], parse_mem("mul[1,3]"))
-		self.assertEqual([], parse_mem("mul(1 ,4 )"))
-
-		self.assertEqual([Command(OP_MULTIPLY, [2,3])], parse_mem("mul(2,3)"))
-		self.assertEqual([Command(OP_MULTIPLY, [1,323])], parse_mem("mul(1,323)"))
-		self.assertEqual([Command(OP_MULTIPLY, [231,30])], parse_mem("mul(231,30)"))
-		self.assertEqual([Command(OP_MULTIPLY, [2,1])], parse_mem("dont_mul(2,1)"))
-		self.assertEqual([Command(OP_DONT, []), Command(OP_MULTIPLY, [2,1])], parse_mem("don\'t()mul(2,1)"))
+	def test_find_neighbors(self): 
+		self.assertEqual(3, len(find_neighbors(0, 0, 3)))
+		self.assertEqual(5, len(find_neighbors(1, 0, 3)))
+		self.assertEqual(3, len(find_neighbors(2, 0, 3)))
+		self.assertEqual(5, len(find_neighbors(0, 1, 3)))
+		self.assertEqual(8, len(find_neighbors(1, 1, 3)))
+		self.assertEqual(5, len(find_neighbors(2, 1, 3)))
+		self.assertEqual(3, len(find_neighbors(0, 2, 3)))
+		self.assertEqual(5, len(find_neighbors(1, 2, 3)))
+		self.assertEqual(3, len(find_neighbors(2, 2, 3)))
 
 
+	def test_find_word(self): 
+		self.assertEqual(2, find_word([
+			"XMAS",
+			"MFAS",
+			"ADEV",
+			"SSSS",
+		], "XMAS"))
+				
+		self.assertEqual(18, find_word([
+			"MMMSXXMASM",
+			"MSAMXMSMSA",
+			"AMXSXMAAMM",
+			"MSAMASMSMX",
+			"XMASAMXAMM",
+			"XXAMMXXAMA",
+			"SMSMSASXSS",
+			"SAXAMASAAA",
+			"MAMMMXMMMM",
+			"MXMXAXMASX"
+		], "XMAS")) 
+	
 
-	def test_execute_arithmetic_command(self): 
-		self.assertEqual(10, execute_arithmetic_command(Command(OP_MULTIPLY, [2,5])))
-		self.assertEqual(0, execute_arithmetic_command(Command(OP_MULTIPLY, [0,1])))
-		self.assertEqual(100, execute_arithmetic_command(Command(OP_MULTIPLY, [2,5,10])))
-		self.assertEqual(0, execute_arithmetic_command(Command(OP_MULTIPLY, [2,0,10])))
-
-		
-	def test_execute_arithmetic_command(self): 
-		self.assertEqual(True, execute_control_command(Command(OP_DO, [])))
-		self.assertEqual(False, execute_control_command(Command(OP_DONT, [])))
-
-		
-	def test_execute_commands(self): 
-		self.assertEqual(10, execute_commands([
-			Command(OP_DO, []),
-			Command(OP_MULTIPLY, [2,5])
+	def test_find_x_mas(self): 
+		self.assertEqual(1, find_x_mas([
+			"M.S",
+			".A.",
+			"M.S",
 		]))
-
-		self.assertEqual(0, execute_commands([
-			Command(OP_DONT, []),
-			Command(OP_MULTIPLY, [2,5])
-		]))
-
-		self.assertEqual(9, execute_commands([
-			Command(OP_DONT, []),
-			Command(OP_MULTIPLY, [2,5]),
-			Command(OP_DO, []),
-			Command(OP_MULTIPLY, [3,3])
-		]))
-
-
+				
 if __name__ == '__main__':
     unittest.main()
