@@ -1,4 +1,4 @@
-from main import find_start_pos, in_bounds, fill_map, count_map, BLOCK_CHAR, START_CHAR
+from main import find_start_pos, in_bounds, fill_map, count_map, BLOCK_CHAR, START_CHAR, pretty_print
 
 import unittest
 
@@ -35,6 +35,9 @@ class Test(unittest.TestCase):
 
 	def test_fill_map_simple(self): 
 		fill_map(self.simple_map)
+		
+		pretty_print(self.simple_map)
+
 		self.assertEqual([
 			['.','.',BLOCK_CHAR,'.','.',],
 			['.','.','X','X',BLOCK_CHAR,],

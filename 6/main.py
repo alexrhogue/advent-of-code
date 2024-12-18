@@ -38,6 +38,12 @@ def get_next_dir(dir):
 def get_reverse_dir(dir):
 	return (dir + 2) % len(DIRECTIONS)
 
+def get_char(pos, map):
+	return map[pos[0]][pos[1]]
+
+def set_char(val, pos, map):
+	map[pos[0]][pos[1]] = val
+
 def in_bounds(pos, map_size):
 	if pos[0] < 0 or pos[1] < 0:
 		return False
@@ -47,49 +53,72 @@ def in_bounds(pos, map_size):
 	
 	return True
 
-def check_for_loop(start_pos, start_dir, map, map_size):
-	path = []
-	obstacle_pos = get_next_pos(start_pos, start_dir)
+def is_next_pos_blocked(pos, dir, map, map_size):
+	next_pos = get_next_pos(pos, dir)
 
-	if not in_bounds(obstacle_pos, map_size) or map[obstacle_pos[0]][obstacle_pos[1]] in [START_CHAR, BLOCK_CHAR]:
+	if not in_bounds(next_pos, map_size):
 		return False
-
-	dir = start_dir
-	pos = start_pos
-
-	while in_bounds(pos, map_size):  
-		if map[pos[0]][pos[1]] == BLOCK_CHAR or (obstacle_pos[0] == pos[0] and obstacle_pos[1] == pos[1]):
-			pos = get_prev_pos(pos, dir)
-			dir = get_next_dir(dir)
-		else:
-			path_step = (pos[0], pos[1], dir)
-			if path_step in path:
-				return True
-			path.append(path_step)
-			
-		pos = get_next_pos(pos, dir)
+	
+	if get_char(next_pos, map) == BLOCK_CHAR:
+		return True
 	
 	return False
+	
+
+def get_next_move(pos, dir, map, map_size):
+		next_dir = dir
+
+		# rotate until next position is clear
+		while is_next_pos_blocked(pos, next_dir, map, map_size):
+			next_dir = get_next_dir(next_dir)
+
+		next_pos = get_next_pos(pos, next_dir)
+
+		return ( next_pos, next_dir )
+
+def has_loop(start_pos, start_dir, map, map_size):
+	path = []
+	pos = start_pos
+	dir = start_dir
+
+	while in_bounds(pos, map_size):
+		path_step = (pos[0], pos[1], dir)
+		if path_step in path:
+			return True
 		
+		path.append(path_step)
+
+		pos, dir = get_next_move(pos, dir, map, map_size)
+
+	return False
+
 def fill_map(map):
-	dir = 0
 	pos = find_start_pos(map)
+	dir = 0
 	map_size = (len(map), len(map[0]))
 
-	while in_bounds(pos, map_size):  
-		char_at_pos = map[pos[0]][pos[1]]
-		if char_at_pos == BLOCK_CHAR:
-			pos = get_prev_pos(pos, dir)
-			dir = get_next_dir(dir)
-		else:
-			if char_at_pos == EMPTY_PATH:			
-				map[pos[0]][pos[1]] = "X"
-			
-			if check_for_loop(pos, dir, map, map_size):
-				obstruction_pos = get_next_pos(pos, dir)
-				map[obstruction_pos[0]][obstruction_pos[1]] = BLOCK_OBSTRUCTION
+	while in_bounds(pos, map_size):
+		# mark current cell
+		if get_char(pos, map) == EMPTY_PATH:			
+			set_char(PATH_CHAR, pos, map)
 		
-		pos = get_next_pos(pos, dir)
+		# find next legal move
+		next_pos, next_dir = get_next_move(pos, dir, map, map_size)
+
+		if in_bounds(next_pos, map_size):
+			next_char = get_char(next_pos, map)
+
+			if next_char is EMPTY_PATH:
+				set_char(BLOCK_CHAR, next_pos, map)
+
+				if has_loop(pos, next_dir, map, map_size):
+					set_char(BLOCK_OBSTRUCTION, next_pos, map)
+				else:
+					set_char(next_char, next_pos, map)
+
+		pos = next_pos
+		dir = next_dir
+
 
 def count_map(map):
 	path_size = 0; 
@@ -105,6 +134,7 @@ def count_map(map):
 	
 	return (path_size, potential_obstructions)
 
+
 def pretty_print(map):
 	for line in map:
 		print(line)
@@ -114,9 +144,6 @@ def main():
 	map = load_input("input.txt")
 
 	fill_map(map)
-	
-	pretty_print(map)
-	
 	path_size, potential_obstructions = count_map(map)
 
 	print("path size", path_size)
