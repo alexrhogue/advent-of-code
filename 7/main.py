@@ -40,6 +40,50 @@ def eval(nums:list[int]) -> list[int]:
 																					 
 	return results
 
+def unconcat_math(l, r) -> int:
+	if r >= l:
+		return -1
+	
+	r_size = 10
+	while r / r_size >= 1:
+		r_size *= 10
+
+	tail = l % r_size
+
+	if tail != r:
+		return -1
+
+	return int((l - tail) / r_size)
+
+def is_target_possible(target:int, nums:list[int], debug:bool = False) -> bool:
+	targets = [target]
+
+	for i in range(len(nums) - 1, 0, -1):
+		if debug: print(targets, nums[i])
+		num = nums[i]	
+
+		new_targets = []
+
+		for t in targets:
+			dif = t - num
+			if debug: print(dif)
+			if dif > 0:
+				new_targets.append(dif)
+
+			quotient  = t / num
+			if debug: print(quotient)
+			if quotient == int(quotient):
+				new_targets.append(int(quotient))
+
+			trimmed = unconcat_math(t, num)
+			if debug: print(trimmed)
+			if trimmed != -1:
+				new_targets.append(trimmed)
+
+		if debug: print(new_targets)
+		targets = new_targets
+
+	return nums[0] in targets
 
 
 def main():
@@ -48,9 +92,8 @@ def main():
 
 	for line in lines:
 		target = line[0]
-		results = eval(line[1:])
 
-		if target in results:
+		if is_target_possible(target, line[1:]):
 			sum += target
 
 	print("sum of successful tests", sum) 
