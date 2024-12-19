@@ -1,3 +1,5 @@
+import multiprocessing
+
 def load_input(input_file: str) -> list[str]:
 	f = open(input_file, "r")
 
@@ -120,6 +122,21 @@ def fill_map(map):
 		dir = next_dir
 
 
+def get_path(pos, dir, map):
+	path = []
+	has_loop = False
+	map_size = (len(map), len(map[0]))
+
+	while in_bounds(pos, map_size):
+		if (pos,dir) in path:
+			has_loop = True
+			break
+
+		path.append((pos, dir))
+		pos, dir = get_next_move(pos, dir, map, map_size)
+
+	return (path, has_loop)
+
 def count_map(map):
 	path_size = 0; 
 	potential_obstructions = 0
@@ -139,15 +156,72 @@ def pretty_print(map):
 	for line in map:
 		print(line)
 
+def worker(id, input, map, return_dict):
+		(pos, dir, obstacle_pos) = input
+
+		map[obstacle_pos[0]][obstacle_pos[1]] = BLOCK_CHAR
+
+		(path, has_loop) = get_path(pos, dir, map)
+
+		return_dict[id] = has_loop
 
 def main():
-	map = load_input("input.txt")
+	input_map = load_input("input.txt")
 
-	fill_map(map)
-	path_size, potential_obstructions = count_map(map)
+	start_pos = find_start_pos(input_map)
+	start_dir = 0
+	(path, has_loop) = get_path(start_pos, start_dir, input_map)
 
+	print("path found")
+
+	visited = set()
+	potential_obstacles = []
+	for i in range(len(path) -1):
+		pos, dir = path[i]
+		if pos in visited:
+			continue
+
+		visited.add(pos)
+
+		next_pos = path[i+1][0]
+		if next_pos in visited:
+			continue
+
+		potential_obstacles.append((pos, dir, next_pos))
+
+
+
+	manager = multiprocessing.Manager()
+	total_items = len(potential_obstacles)
+	jobs = []
+	batch_count = 0
+	batch_size = 24
+	return_dict = manager.dict()
+
+	while batch_size * batch_count < total_items:
+		print(f"\rprocessing batch # {batch_count + 1}/{int(total_items/batch_size)}", end="")
+
+		start = batch_count * batch_size
+		end = min((batch_count + 1) * batch_size, total_items)
+			
+		for j in range(start, end):
+			p = multiprocessing.Process(target=worker, args=(j, potential_obstacles[j], input_map, return_dict))
+			jobs.append(p)
+			p.start()
+
+		for p in jobs:
+			p.join()
+
+		batch_count += 1
+		
+		
+	
+	print("\n----")
+	path_size = len(set(map(lambda c: c[0], path)))
 	print("path size", path_size)
-	print("# obstruction options", potential_obstructions)
+
+	num_options = len(list(filter(bool, return_dict.values())))
+	print("obstruction options count", num_options)
     
 if __name__=="__main__":
 	main()
