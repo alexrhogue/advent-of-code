@@ -1,4 +1,4 @@
-from main import eval, concat_math
+from main import eval, concat_math, is_target_possible, unconcat_math
 
 import unittest
 
@@ -28,6 +28,30 @@ class Test(unittest.TestCase):
 
 		
 		self.assertEqual(39422310, concat_math(394223, 10))
+
+	def test_unconcat_math(self):
+		self.assertEqual(1, unconcat_math(12, 2))
+		self.assertEqual(123, unconcat_math(1234, 4))
+		self.assertEqual(12, unconcat_math(1234, 34))
+		self.assertEqual(1, unconcat_math(1234, 234))
+
+
+		self.assertEqual(-1, unconcat_math(12, 12))
+		self.assertEqual(-1, unconcat_math(224, 2))
+		self.assertEqual(-1, unconcat_math(224, 20))
+		self.assertEqual(-1, unconcat_math(224, 100))
+		self.assertEqual(-1, unconcat_math(224, 1000))
+
+	def test_eval(self): 
+		self.assertEqual(True, is_target_possible(1, [1]))
+		self.assertEqual(True, is_target_possible(5, [2, 3]))
+		self.assertEqual(True, is_target_possible(6, [2, 3]))
+		self.assertEqual(False, is_target_possible(1, [2, 3]))
+		self.assertEqual(True, is_target_possible(24, [2, 3, 4]))
+		self.assertEqual(True, is_target_possible(23, [2, 3]))
+		self.assertEqual(True, is_target_possible(234, [2, 3, 4]))
+		self.assertEqual(True, is_target_possible(64, [2, 3, 4]))
+		self.assertEqual(True, is_target_possible(54, [2, 3, 4])) 
 
 if __name__ == '__main__':
     unittest.main()
