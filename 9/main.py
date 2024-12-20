@@ -44,43 +44,37 @@ def reformat_disk(input_disk: list[int]) -> list[int]:
 
 def reformat_disk_v2(input_disk: list[int]) -> list[int]:
 	disk = input_disk.copy()
-	head = 0
-	head_size = 0
 	tail = len(disk) - 1
 	tail_size = 0
-	tail_key = ''
 
-	while disk[head] != '.':
-		head += 1
+	while(tail >= 0):
+		if tail_size > 0 and disk[tail] != disk[tail+1]:
+			head_size = 0
+			for i in range(tail + 1):
+				if disk[i] == '.':
+					head_size += 1
+				else:
+					head_size = 0
 
-	head_size = 0
-	while disk[head] == '.':
-		head_size += 1
-		head += 1
+				if head_size == tail_size:
+					for j in range(0, tail_size):
+						h = i - j
+						t = tail + (j + 1)
+						
+						swap = disk[t]
+						disk[t] = disk[h]
+						disk[h] = swap
+					
+					break
 
-	while head_size > 0:
-		while disk[tail] == '.':
-			tail -= 1
+			tail_size = 0
 
-		tail_size = 0
-		tail_key = disk[tail]
-		while disk[tail] == tail_key:
-			tail -= 1
+		if disk[tail] != '.':
 			tail_size += 1
-
-		if tail_size <= head_size:
-			for i in range(tail_size):
-				h = head - (head_size - i)
-				t = tail + (i + 1)
-				
-				swap = disk[t]
-				disk[t] = disk[h]
-				disk[h] = swap
 			
-			head_size -= tail_size
 
+		tail -= 1
 
-	
 	return disk
 def calc_checksum(disk: list[int]) -> int:
 	check_sum = 0
