@@ -1,6 +1,3 @@
-import re
-
-digit_regex = re.compile(r'\d+')
 
 def load_input(input_file: str) -> list[int]:
 	f = open(input_file, "r")
