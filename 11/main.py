@@ -31,54 +31,36 @@ def calc_blink(num:int) -> int:
 
 	return [right, left]
 
+def blink_dfs(num:int, i:int, depth: int) -> int:
+	if i == depth:
+		return 1
+	
+	if num == 0:
+		return blink_dfs(1, i+1, depth)
+	
+	num_digits = 1 + math.floor(math.log10(num))
 
-""" def blink_single(start:int, blinks:int) -> int:
-	max_size = 1_000_000_000
-	size = 1
-	arr1 = np.zeros(max_size)
-	arr2 = np.zeros(max_size)
+	if num_digits % 2 == 1:
+		return blink_dfs(num*2024, i+1, depth)
 
-	prev = [start]
+	t = math.pow(10, num_digits / 2)
 
-	for b in range(blinks):
-		for i in range(size):
-			
-		print(len(prev))
-		stones = []
-		for s in prev:
-			if s == 0:
-				stones.append(1)
-				continue
+	right = math.floor(num % t)
+	left = math.floor((num - right)/t)
 
-			num_digits = 1 + math.floor(math.log10(s))
-
-			if num_digits % 2 == 1:
-				stones.append(s * 2024)
-				continue
-
-			t = math.pow(10, num_digits / 2)
-
-			right = math.floor(s % t)
-			left = math.floor((s - right)/t)
-
-			stones.append(left)
-			stones.append(right)
-
-		prev = stones.copy()
-
-	return len(prev)
- """
+	return blink_dfs(left, i+1, depth) + blink_dfs(right, i+1, depth)
+	
 
 def main():
 	stones = load_input('input.txt')
 	total_stones = 0
-	num_blinks = 25
-	
-	print('initial arrangement\n', stones)
-	for b in range(num_blinks):
-		stones = blink(stones)
+	num_blinks = 75
+	total_stones = 0
 
-	total_stones = len(stones)
+	for s in stones:
+		print("processing stone", s)
+		total_stones += blink_dfs(s, 0, num_blinks)
+
 	print("total stones\n", total_stones)
 	assert(total_stones == 207683)
 
