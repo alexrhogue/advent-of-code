@@ -1,68 +1,43 @@
 
 import math
-import numpy as np
+from collections import Counter
+
 
 def load_input(input_file: str) -> list[int]:
 	f = open(input_file, 'r')
 
 	return [int(x) for x in list(f.readlines()[0].strip('\n').split(' '))]
 
-def blink(prev:list[int]):
-	stones = []
 
-	for s in prev:
-		stones += calc_blink(s)
+def blink(stones:Counter) -> int:
+	result = Counter()
+	for stone, count in stones.items():
+		if stone == 0:
+			result[1] += count
+		else:
+			num_digits = 1 + math.floor(math.log10(stone))
 
-	return stones
+			if num_digits % 2 == 1:
+				result[stone * 2024] += count
+			else:
+				t = math.pow(10, num_digits / 2)
+				right = math.floor(stone % t)
+				left = math.floor((stone - right)/t)
 
-def calc_blink(num:int) -> int:
-	if num == 0:
-		return [1]
-	
-	num_digits = 1 + math.floor(math.log10(num))
+				result[right] += count
+				result[left] += count
 
-	if num_digits % 2 == 1:
-		return [num * 2024]
-
-	t = math.pow(10, num_digits / 2)
-
-	right = math.floor(num % t)
-	left = math.floor((num - right)/t)
-
-	return [right, left]
-
-def blink_dfs(num:int, i:int, depth: int) -> int:
-	if i == depth:
-		return 1
-	
-	if num == 0:
-		return blink_dfs(1, i+1, depth)
-	
-	num_digits = 1 + math.floor(math.log10(num))
-
-	if num_digits % 2 == 1:
-		return blink_dfs(num*2024, i+1, depth)
-
-	t = math.pow(10, num_digits / 2)
-
-	right = math.floor(num % t)
-	left = math.floor((num - right)/t)
-
-	return blink_dfs(left, i+1, depth) + blink_dfs(right, i+1, depth)
-	
+	return result
 
 def main():
-	stones = load_input('input.txt')
-	total_stones = 0
+	stones = Counter(load_input('input.txt'))
 	num_blinks = 75
-	total_stones = 0
 
-	for s in stones:
-		print("processing stone", s)
-		total_stones += blink_dfs(s, 0, num_blinks)
-
+	for i in range(num_blinks):
+		stones = blink(stones)
+		
+	total_stones = sum(stones.values())
 	print("total stones\n", total_stones)
-	assert(total_stones == 207683)
 
     
 if __name__=='__main__':
