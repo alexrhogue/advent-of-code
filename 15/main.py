@@ -64,7 +64,6 @@ def move(i,j, move_cmd, warehouse):
 		return (i2, j2)
 
 	
-
 	while(warehouse[i2][j2] != WALL and warehouse[i2][j2] != EMPTY):
 		i2 += mI
 		j2 += mJ
@@ -74,17 +73,13 @@ def move(i,j, move_cmd, warehouse):
 		# print('dont move')
 		return (i,j)
 
-
-	moved = False
 	while i != i2 or j != j2:
-		# print(i2,j2,i2 - mI,j2 - mJ)
-		moved = True
 		swap(i2, j2, i2 - mI, j2 - mJ, warehouse)
 		i2 -= mI
 		j2 -= mJ
 
 
-	return (i,j) if not moved else (i + mI, j + mJ)
+	return (i + mI, j + mJ)
 
 def calc_gps(warehouse):
 	gps = 0
