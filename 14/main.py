@@ -1,5 +1,9 @@
 import re
 import math
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
+from collections import Counter
 
 digit_regex = re.compile(r'-?\d+')
 
@@ -38,21 +42,38 @@ def calc_safety_factor(positions, width, height):
 
 	return math.prod(scores)
 
+def worth_rendering(x,y):
+	rows = Counter(y)
+	return rows.most_common(1)[0][1] > 15
+
 def main():
 	robots = load_input("input.txt")
 
 	width = 101
 	height = 103
-	moves = 100
+	moves = 10000
 
-	positions = []
-	for robot in robots:
-		px, py, vx, vy = robot
-		positions.append(move(px, py, vx, vy, width, height, moves))
+	with PdfPages('positions.pdf') as pdf:
+		for moves in range(moves):
+			x = []
+			y = []
+			for robot in robots:
+				px, py, vx, vy = robot
+				result = move(px, py, vx, vy, width, height, moves)
+
+				x.append(result[0])
+				y.append(result[1])
+
+			if worth_rendering(x,y):
+				plt.figure()
+				plt.gca().invert_yaxis()
+				plt.title(f'{moves}')
+				plt.scatter(x, y)
+				pdf.savefig()
+				plt.close()
 
 
-	print(positions)
-	print('safety factor', calc_safety_factor(positions, width, height))
+
     
 if __name__=="__main__":
 	main()
