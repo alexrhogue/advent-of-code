@@ -1,6 +1,5 @@
-import queue
-import sys
-print(sys.getrecursionlimit())
+import heapq
+
 def load_input(input_file: str) -> list[str]:
 	f = open(input_file, "r")
 	maze = []
@@ -10,6 +9,7 @@ def load_input(input_file: str) -> list[str]:
 	return maze
 
 def pretty_print(maze):
+	print('---')
 	for i in range(len(maze)):
 		print("".join(str(maze[i])))
 	print('---')
@@ -19,10 +19,6 @@ def get_pos(char, maze):
 		for j in range(len(maze[i])):
 			if maze[i][j] == char:
 				return (i,j)
-
-
-EMPTY = '.'
-WALL = '#'
 
 # figure out a math way to do this
 def get_rotation_cost(from_dir, to_dir):
@@ -34,75 +30,93 @@ def get_rotation_cost(from_dir, to_dir):
 	
 	return 1000
 
-def get_neighbors(start, dir):
-	return [
-		[(start[0] - 1, start[1]), 0, 1 + get_rotation_cost(dir, 0)],
-		[(start[0], start[1] + 1), 1, 1 + get_rotation_cost(dir, 1)],
-		[(start[0] + 1, start[1]), 2, 1 + get_rotation_cost(dir, 2)],
-		[(start[0], start[1] - 1), 3, 1 + get_rotation_cost(dir, 3)]
+def get_next(i, j, dir):
+	move = [
+		(i - 1, j),
+		(i, j + 1),
+		(i + 1, j),
+		(i, j - 1)
 	]
 
-def in_bounds(pos, maze):
-	if pos[0] > -1 and pos[1] > -1 and pos[0] < len(maze) and  pos[1] < len(maze[0]):
-		return maze[pos[0]][pos[1]] != "#"
+	return move[dir]
+
+def get_rotations(from_dir):
+	return map(lambda to_dir: [to_dir, get_rotation_cost(from_dir, to_dir)], filter(lambda to_dir: to_dir != from_dir, [0,1,2,3]))
+
+def in_bounds(i, j, maze):
+	if i > -1 and j > -1 and i < len(maze) and j < len(maze[0]):
+		return maze[i][j] != "#"
 	
 	return False
 
+def get_all_paths(start, maze):
+	dist = {}
+	nodes = []
+	
+	for (start_i, start_j, start_dir) in start:
+		dist[(start_i, start_j, start_dir)] = 0
+		heapq.heappush(nodes, [0, start_i, start_j, start_dir])
 
-def get_all_paths(start_pos, end_pos, start_dir, maze):
-	paths = []
+	while nodes:
+		score, i, j, dir = heapq.heappop(nodes)
 
-	best_score = float('inf')
-	q = []
-	q.append([start_pos, start_dir, 0, [start_pos]])
-
-	while len(q) > 0:
-		pos, dir, score, path = q.pop()
-		if pos == end_pos and score <= best_score:
-			print(pos, score)
-			best_score = score
-			paths.append([score, path])
+		if dist[(i,j,dir)] < score:
 			continue
 
-		for next_pos, next_dir, next_score in get_neighbors(pos, dir):
-			if in_bounds(next_pos, maze) and next_pos not in path:
-				# abandon paths that are already more costly than current best
-				if next_score + score <= best_score:
-					next_path = path.copy()
-					next_path.append(next_pos)
-					q.append([next_pos, next_dir, next_score + score, next_path])
+		for next_dir, score_increase in get_rotations(dir):
+				next_score = score_increase + score
+
+				if (i, j, next_dir) not in dist or next_score < dist[(i, j, next_dir)]:
+					dist[(i, j, next_dir)] = next_score
+					heapq.heappush(nodes, [next_score, i, j, next_dir])
+
+		(next_i, next_j) = get_next(i, j, dir) 
+		next_score = 1 + score
+
+		if in_bounds(next_i, next_j, maze) and ((next_i, next_j, dir) not in dist or next_score < dist[(next_i, next_j, dir)]):
+				dist[(next_i, next_j, dir)] = next_score
+				heapq.heappush(nodes, [next_score, next_i, next_j, dir])
 		
-	return paths
-
-
-def analyze_best_path(paths):
-	if len(paths) == 0:
-		return (float('inf'), float('inf'))
 	
-	lowest_score = sorted(paths, key=lambda p: p[0])[0][0]
+	return dist
+
+
+def analyze_best_path(end_i, end_j, dist, maze):
+	lowest_score = float('inf')
+	reverse_start = []
+	for dir in range(0, 4):
+		reverse_start.append((end_i, end_j, dir))
+		lowest_score = min(lowest_score, dist[(end_i, end_j, dir)])
+
+
 	unique_tiles = set({})
-	
-	for path in paths:
-		if path[0] == lowest_score:
-			unique_tiles.update( path[1])
+	reverse_dist = get_all_paths(reverse_start, maze)
+	for i in range(len(maze)):
+		for j in range(len(maze[i])):
+			for dir in range(0, 4):
+				forward = dist[(i,j,dir)] if (i,j,dir) in dist else None
+				backward = reverse_dist[(i,j,(dir + 2) % 4)] if (i,j,(dir + 2) % 4) in dist else None
+
+				if forward is not None and backward is not None and forward + backward == lowest_score:
+					unique_tiles.add((i,j))
+
 
 	return (lowest_score, len(unique_tiles))
 	
 
 def main():
 	maze = load_input('input.txt')
-	start = get_pos('S', maze)
-	end = get_pos('E', maze)
+	start_i, start_j = get_pos('S', maze)
+	end_i, end_j = get_pos('E', maze)
 
 
 	pretty_print(maze)
-	print('start', start)
-	print('end', end)
-	paths = get_all_paths(start, end, 1, maze)
-
-	score, num_unique_tiles = analyze_best_path(paths)
+	print('start', start_i, start_j)
+	print('end', end_i, end_j)
+	dist = get_all_paths([(start_i, start_j, 1)], maze)
+	score, unique_tiles = analyze_best_path(end_i, end_j, dist, maze)
 	print('lowest score', score)
-	print('lowest score unique tiles', num_unique_tiles)
-    
+	print('lowest score unique tiles', unique_tiles)
+
 if __name__=='__main__':
 	main()
