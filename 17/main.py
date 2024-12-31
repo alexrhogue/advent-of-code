@@ -93,9 +93,6 @@ def run_program(program, registers):
 			
 	return output
 
-# starts from the last output
-# what's the smallest numbers that makes zero?
- # shift it left 3 bits - what's the smallest number (000-111) that makes 3 and so on
 def solve_program(program):
 	output = []
 
@@ -103,19 +100,21 @@ def solve_program(program):
 	target_index = len(program) - 1
 
 	while target_index >= 0:
-		for i in range(7):
-			# print(input)
-			input += 1
+		match = False
+		for i in range(input % 8, 8):
+			print(i, bin(input))
 			output = run_program(program, [input, 0, 0])
 
-			if output[0] == program[target_index]:
+			if output == program[target_index:len(program)]:
+				print('match', input, bin(input),  program[target_index], output)
+				target_index -= 1
+				input = input << 3
+				match = True
 				break
-			
-		if output == program[target_index:len(program)]:
-			print('match', input, bin(input),  program[target_index], output)
-			target_index -= 1
-			input = input << 3
-		else:
+
+			input += 1
+
+		if not match:
 			print('going back')
 			target_index += 1
 			input = input >> 3
