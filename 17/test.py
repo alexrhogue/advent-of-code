@@ -4,6 +4,11 @@ import unittest
 
 class Test(unittest.TestCase): 
 
+  def test_match(self):
+     a = [1,2,3]
+     b = [1,2]
+     
+     print(b, a[0:len(b)])
   def test_combo(self):
      registers = [10,20,30]
      self.assertEqual(0, combo(0, registers))
