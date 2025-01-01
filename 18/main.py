@@ -56,6 +56,33 @@ def solve_grid(grid, si, sj, ei, ej):
 
 	return dist
 
+
+def bisect(grid, falling_bytes):
+	start = 0
+	end = len(falling_bytes)
+	prev_mid = 0
+	while start <= end:
+		mid = (start + end) // 2
+		print(start, end, mid, prev_mid)
+
+		if prev_mid < mid:
+			for i in range(prev_mid, mid):
+				grid[falling_bytes[i][1]][falling_bytes[i][0]] = '#'
+		else:
+			for i in range(mid, prev_mid):
+				grid[falling_bytes[i][1]][falling_bytes[i][0]] = '.'
+
+
+		dist = solve_grid(grid, 0, 0, 70,70)
+		if (70,70) not in dist:
+			end = mid - 1
+		else:
+			start = mid + 1
+
+		prev_mid = mid
+
+	return (start, end)
+
 GRID_SIZE = 71
 def main():
 	t1 = time.time()
@@ -69,23 +96,11 @@ def main():
 		dist = solve_grid(grid, 0, 0, 70,70)
 		print("shortest path",  dist[(70,70)] if (70,70) in dist else -1)
 	else:
-		path_cutoff = -1
-		sim_falling(falling_bytes, 0, 1024, grid)
-		for i in range(1024, len(falling_bytes)): 
-			sim_falling(falling_bytes, i, i+1, grid)
-			dist = solve_grid(grid, 0, 0, 70,70)
+		(good, bad) =  bisect(grid, falling_bytes)
+		print(good, bad)
+		print(falling_bytes[good], falling_bytes[bad])
 
-			if(-1 == dist[(70,70)] if (70,70) in dist else -1):
-				path_cutoff = i
-				break
-			
 
-		
-		pretty_print(grid)
-		if path_cutoff != -1:
-			print(f'path cutoff at byte {i}:({falling_bytes[i]})')
-		else:
-			print('path remains open after all bytes')
 
 
 	t2 = time.time()
