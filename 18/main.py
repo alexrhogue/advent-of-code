@@ -1,5 +1,6 @@
 import sys
 import heapq
+import time
 
 def get_part():
 	if len(sys.argv) > 1:
@@ -57,18 +58,38 @@ def solve_grid(grid, si, sj, ei, ej):
 
 GRID_SIZE = 71
 def main():
+	t1 = time.time()
 	falling_bytes = load_input('input.txt')
 
+	grid = [ ['.']*GRID_SIZE for i in range(GRID_SIZE)]
+
 	if get_part() == 1:
-		grid = [ ['.']*GRID_SIZE for i in range(GRID_SIZE)]
 		sim_falling(falling_bytes, 0, 1024, grid)
 		pretty_print(grid)
 		dist = solve_grid(grid, 0, 0, 70,70)
 		print("shortest path",  dist[(70,70)] if (70,70) in dist else -1)
-
 	else:
-		print("todo")
-	
+		path_cutoff = -1
+		sim_falling(falling_bytes, 0, 1024, grid)
+		for i in range(1024, len(falling_bytes)): 
+			sim_falling(falling_bytes, i, i+1, grid)
+			dist = solve_grid(grid, 0, 0, 70,70)
 
+			if(-1 == dist[(70,70)] if (70,70) in dist else -1):
+				path_cutoff = i
+				break
+			
+
+		
+		pretty_print(grid)
+		if path_cutoff != -1:
+			print(f'path cutoff at byte {i}:({falling_bytes[i]})')
+		else:
+			print('path remains open after all bytes')
+
+
+	t2 = time.time()
+
+	print(f"part {get_part()}: took {round(t2-t1, 5)}s")
 if __name__=='__main__':
 	main()
