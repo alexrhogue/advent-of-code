@@ -145,36 +145,3 @@ def main():
 
 if __name__=='__main__':
 	main()
-
-	"""
-	
-def solve_program(program, registers):
-	curA = registers[0]
-	output = []
-
-	print('starting at', curA)
-	while True:
-		pointer = 0
-		output = []
-		registers = [curA,0,0]
-		while pointer < len(program) - 1:
-			newPointer = op(program[pointer], program[pointer + 1], output, registers)
-			if newPointer is None:
-				pointer += DEFAULT_STEP
-			else:
-				pointer = newPointer
-
-			if len(output) > 0 and output != program[0:len(output)]:
-				break
-
-		if len(output) > 6:
-			print(curA, 'near hit', output)
-
-		if output == program:
-			break
-		
-		curA += 1
-
-	print("lowest a", curA)
-	return output
-	"""
