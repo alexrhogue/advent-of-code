@@ -32,6 +32,7 @@ def get_loc(c, grid):
 def solve_grid(grid, si, sj, ei, ej):
 	grid_size = len(grid)
 	dist = {}
+	path = []
 	q = []
 
 	heapq.heappush(q, (0, si, sj))
@@ -39,6 +40,8 @@ def solve_grid(grid, si, sj, ei, ej):
 
 	while q:
 		d,i,j = heapq.heappop(q)
+
+		path.append((i, j))
 
 		if dist[(i,j)] < d:
 			continue
@@ -55,8 +58,29 @@ def solve_grid(grid, si, sj, ei, ej):
 				dist[(i2,j2)] = d2
 				heapq.heappush(q, (d2, i2, j2))
 
-	return dist
+	return dist, path
 
+def calc_cheat_dists(ei, ej, dist, path):
+	cheat_dists = []
+	for (i,j) in path:
+		if i == ei and j == ej:
+			continue
+		
+		for dir in [(-1,0),(0,1),(1,0),(0,-1)]:	
+			i2 = i + dir[0]
+			j2 = j + dir[1]
+			if (i2,j2) in dist:
+				continue
+
+			i2 += dir[0]
+			j2 += dir[1]
+			if (i2,j2) not in dist:
+				continue
+
+
+			cheat_dists.append(dist[(i2,j2)] - (2 + dist[(i,j)]))
+
+	return cheat_dists
 
 def main():
 	t1 = time.time()
@@ -67,8 +91,11 @@ def main():
 
 	if get_part() == 1:
 		pretty_print(grid)
-		dist = solve_grid(grid, si, sj, ei, ej)
+		dist, path = solve_grid(grid, si, sj, ei, ej)
+		cheat_dists = calc_cheat_dists(ei, ej, dist, path)
+		
 		print('shortest path',  dist[(ei, ej)] if (ei, ej) in dist else -1)
+		print('cheats that >= 100 picoseconds', len(list(filter(lambda c: c >= 100, cheat_dists))))
 	else:
 		print('TODO')
 
