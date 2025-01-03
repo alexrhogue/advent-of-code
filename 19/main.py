@@ -52,15 +52,36 @@ def test_patterns(towels, patterns):
 
 	return count
 	
+def find_combinations(towels, pattern):
+	dp = [0] * (len(pattern) + 1)
+	for i in range(1, len(pattern) + 1):
+		for j in range(i):
+			for towel in towels:
+				if j + len(towel) == i and towel == pattern[j:i]:
+					if j == 0:
+						dp[i] += 1
+					else:
+						dp[i] += dp[j]
+
+	print(dp)
+	return dp[len(pattern)]
+
+	
 def main():
 	t1 = time.time()
-	towels, pattern = load_input('input.txt')
+	towels, patterns = load_input('input.txt')
 
 	if get_part() == 1:
-		count =  test_patterns(towels, pattern)
+		count =  test_patterns(towels, patterns)
 		print('# designs possible', count)
 	else:
-		print('todo')
+		combinations = 0
+		for pattern in patterns:
+			combinations += find_combinations(towels, pattern)
+			break
+
+		print('# unique combinations', combinations)
+		#[print(c) for c in combinations]
 
 
 	print(f"part {get_part()}: took {round(time.time()-t1, 5)}s")
