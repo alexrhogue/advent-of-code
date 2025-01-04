@@ -60,26 +60,32 @@ def solve_grid(grid, si, sj, ei, ej):
 
 	return dist, path
 
-def calc_cheat_dists(ei, ej, dist, path):
+def get_reachable_cells(ci,cj, max_size, dist):
+	reachable_cells = []
+	for i in range(ci - (max_size + 1), ci + (max_size + 2)):
+		offset = ((max_size + 1) - abs(i - ci))
+		for j in range(cj - offset, cj + offset + 1):
+			if (i,j) in dist:
+				reachable_cells.append((i,j, dist[(ci,cj)] + abs(ci-i) + abs(cj-j)))
+		
+	return reachable_cells
+
+def calc_cheat_dists(ei, ej, max_cheat_length, dist, path):
 	cheat_dists = []
+	f = 0
 	for (i,j) in path:
+		print('-')
+		print('(i,j)', i,j, dist[(i,j)])
 		if i == ei and j == ej:
 			continue
 		
-		for dir in [(-1,0),(0,1),(1,0),(0,-1)]:	
-			i2 = i + dir[0]
-			j2 = j + dir[1]
-			if (i2,j2) in dist:
-				continue
-
-			i2 += dir[0]
-			j2 += dir[1]
-			if (i2,j2) not in dist:
-				continue
+		for (i2,j2, cheat_dist) in get_reachable_cells(i, j, max_cheat_length, dist):
+			# ignore cheats that cost the same or more than the normal path
+			if cheat_dist < dist[(i2,j2)]:
+				cheat_dists.append(dist[(i2,j2)] - cheat_dist)
 
 
-			cheat_dists.append(dist[(i2,j2)] - (2 + dist[(i,j)]))
-
+	print(cheat_dists)
 	return cheat_dists
 
 def main():
@@ -89,17 +95,17 @@ def main():
 	si, sj = get_loc('S', grid)
 	ei, ej = get_loc('E', grid)
 
-	if get_part() == 1:
-		pretty_print(grid)
-		dist, path = solve_grid(grid, si, sj, ei, ej)
-		cheat_dists = calc_cheat_dists(ei, ej, dist, path)
-		
-		print('shortest path',  dist[(ei, ej)] if (ei, ej) in dist else -1)
-		print('cheats that >= 100 picoseconds', len(list(filter(lambda c: c >= 100, cheat_dists))))
-	else:
-		print('TODO')
+	pretty_print(grid)
+	dist, path = solve_grid(grid, si, sj, ei, ej)
+	cheat_size = 1
+	f = 1
+	if get_part() != 1:
+		cheat_size = 20
 
-
+	cheat_dists = calc_cheat_dists(ei, ej, cheat_size, dist, path)
+	print('shortest path',  dist[(ei, ej)] if (ei, ej) in dist else -1)
+	print(f'cheats that saved >= {f} picoseconds', len(list(filter(lambda c: c >= f, cheat_dists))))
+	
 
 	t2 = time.time()
 
