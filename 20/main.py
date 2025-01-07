@@ -23,6 +23,22 @@ def pretty_print(grid):
 		print("".join(grid[i]))
 	print('---')
 
+def pretty_print_time_saved(time_saved, min_time_save):
+	count = {}
+	times = set()
+	for t in time_saved:
+			if t < min_time_save:
+				continue
+
+			times.add(t)
+			if t in count:
+				count[t] += 1
+			else:
+				count[t] = 1
+
+	for t in sorted(times):
+		print(f'- There are {count[t]} cheats that saved {t} picoseconds.')
+
 def get_loc(c, grid):
 	for i in range(len(grid)):
 		for j in range(len(grid[i])):
@@ -70,45 +86,39 @@ def get_reachable_cells(ci,cj, max_size, dist):
 		
 	return reachable_cells
 
-def calc_cheat_dists(ei, ej, max_cheat_length, dist, path):
-	cheat_dists = []
-	f = 0
+def calc_time_saved_with_cheat(ei, ej, max_cheat_length, dist, path, grid):
+	time_saved = []
 	for (i,j) in path:
-		print('-')
-		print('(i,j)', i,j, dist[(i,j)])
 		if i == ei and j == ej:
 			continue
 		
 		for (i2,j2, cheat_dist) in get_reachable_cells(i, j, max_cheat_length, dist):
-			# ignore cheats that cost the same or more than the normal path
 			if cheat_dist < dist[(i2,j2)]:
-				cheat_dists.append(dist[(i2,j2)] - cheat_dist)
+				time_saved.append(dist[(i2,j2)] - cheat_dist)
 
-
-	print(cheat_dists)
-	return cheat_dists
+	return time_saved
 
 def main():
 	t1 = time.time()
 	grid = load_input('input.txt')
-	pretty_print(grid)
 	si, sj = get_loc('S', grid)
 	ei, ej = get_loc('E', grid)
 
-	pretty_print(grid)
 	dist, path = solve_grid(grid, si, sj, ei, ej)
 	cheat_size = 1
-	f = 1
+	min_time_save = 100
 	if get_part() != 1:
 		cheat_size = 20
 
-	cheat_dists = calc_cheat_dists(ei, ej, cheat_size, dist, path)
+	time_saved = calc_time_saved_with_cheat(ei, ej, cheat_size, dist, path, grid)
+
+	pretty_print_time_saved(time_saved, min_time_save)
 	print('shortest path',  dist[(ei, ej)] if (ei, ej) in dist else -1)
-	print(f'cheats that saved >= {f} picoseconds', len(list(filter(lambda c: c >= f, cheat_dists))))
-	
+	print(f'# cheats that saved >= {min_time_save} picoseconds', len(list(filter(lambda c: c >= min_time_save, time_saved))))
 
 	t2 = time.time()
-
 	print(f'part {get_part()}: took {round(t2-t1, 5)}s')
 if __name__=='__main__':
 	main()
+
+# correct answers = 1448 1017615
