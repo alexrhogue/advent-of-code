@@ -101,38 +101,69 @@ def solve_nodes(nodes):
 				
 	return solves
 
-def solve(code, passes):
-	codes = [code]
-	for solve in passes:
-		cur_pass = []
-		prev = 'A'
-		for key in codes[-1]:
-			cur_pass = cur_pass + solve[prev][key][0] + ['A']
-			prev = key
+def parse_numeric_code(code) -> int:
+	return int("".join(filter(lambda x: x.isdigit(), code)))
 
-		codes.append(cur_pass)
-		print("".join(codes[-1]), len(codes[-1]))
-
-	return codes[-1]
+def solve_code(code, solve):
+	solutions = []
 	
+	prev = 'A'
+	for key in code:
+		solutions.append(list(map(lambda x: x + ['A'], solve[prev][key])))
+		prev = key
+
+	options = []
+	for i in range(len(solutions)):
+		new_options = []
+		for j in range(len(solutions[i])):
+			if i == 0:
+				new_options.append(solutions[i][j])
+			else:
+				for k in range(len(options)):
+					new_options.append(options[k] + solutions[i][j])
+
+
+		options = new_options
+
+	return options
+
+def solve(start_code, solves):
+	codes = [start_code]
+	for solve in solves:
+		new_codes = []
+		for code in codes:
+			new_codes += solve_code(code, solve)
+
+		codes = new_codes
+
+
+	return sorted(codes, key = lambda x: len(x))[0]
+
 def main():
 	t1 = time.time()
 	codes = load_input('input.txt')
 
-	if get_part() == 1:
-		numeric_nodes = build_nodes(NUMERIC)
-		numeric_solve = solve_nodes(numeric_nodes)
-		#print('numeric_solve:')
-		#pprint.pprint(numeric_solve)
-	
-		directional_nodes = build_nodes(DIRECTIONAL)
-		directional_solve = solve_nodes(directional_nodes)
-		print('directional_solve:')
-		pprint.pprint(directional_solve)
+	numeric_nodes = build_nodes(NUMERIC)
+	numeric_solve = solve_nodes(numeric_nodes)
+	directional_nodes = build_nodes(DIRECTIONAL)
+	directional_solve = solve_nodes(directional_nodes)
 
-		print(len(solve(codes[0], [numeric_solve, directional_solve, directional_solve])))
-	else:
-		print('todo')
+	sum_complexity = 0
+	solves = [numeric_solve]
+	for i in range(0, 2 if get_part() == 1 else 25):
+		solves.append(directional_solve)
+
+	print(f'running part {get_part()}')
+	print(f'handling {len(solves)} solves')
+	for code in codes:	
+		numeric_part = parse_numeric_code(code)
+		shortest_seq = solve(code, solves)
+	
+		print(code, numeric_part, len(shortest_seq))
+
+		sum_complexity += (numeric_part * len(shortest_seq)) 
+
+	print('total complexity', sum_complexity)
 
 
 	print(f"part {get_part()}: took {round(time.time()-t1, 5)}s")
