@@ -1,6 +1,7 @@
 import sys
 import pprint
 import time
+import functools
 
 def get_part():
 	if len(sys.argv) > 1:
@@ -13,7 +14,7 @@ def load_input(input_file: str) -> list[str]:
 
 	codes = []
 	for pattern in f.readlines():
-		codes.append(list(pattern.strip()))
+		codes.append(pattern.strip())
 
 	return (codes)
 
@@ -76,13 +77,35 @@ def build_nodes(grid):
 	return nodes
 
 
+def count_turns(path):
+	t = 0
+
+	for i in range(len(path)):
+		if i != 0 and path[i] != path[i-1]:
+			t += 1
+
+	return t
+
+def pick_best(pathA, pathB):
+	# turns are expensive downstream
+	ta = count_turns(pathA)
+	tb = count_turns(pathB)
+
+	if ta != tb:
+		return pathA if ta < tb else pathB
+	
+
+	# if all else is the same, chose the shortest path
+	#print("same turns", pathA, pathB)
+	return pathA if len(pathA) < len(pathB) else pathB
+
 def solve_nodes(nodes):
 	solves = {}
 	for n in nodes:
 		solves[n] = {}
-		solves[n][n] = [[]]
+		solves[n][n] = ''
 
-		queue = list(map(lambda x: (x[0], [x[1]]) , nodes[n]))
+		queue = list(map(lambda x: (x[0], x[1]) , nodes[n]))
 		visited = set([n])
 		
 		while len(queue) > 0:
@@ -90,13 +113,16 @@ def solve_nodes(nodes):
 			visited.add(key)
 
 			if key not in solves[n]:
-				solves[n][key] = [instructions]
+				solves[n][key] = instructions
 			else:
-				solves[n][key].append(instructions)
+				solves[n][key] = pick_best(solves[n][key], instructions) 
 
 			for neighbor in nodes[key]:
 				if neighbor[0] not in visited:
-					queue.append((neighbor[0], instructions + [neighbor[1]]))
+					queue.append((neighbor[0], instructions + neighbor[1]))
+
+		for key in solves[n]:
+			solves[n][key] += 'A'
 
 				
 	return solves
@@ -104,64 +130,43 @@ def solve_nodes(nodes):
 def parse_numeric_code(code) -> int:
 	return int("".join(filter(lambda x: x.isdigit(), code)))
 
-def solve_code(code, solve):
-	solutions = []
+numeric_nodes = build_nodes(NUMERIC)
+numeric_solve = solve_nodes(numeric_nodes)
+directional_nodes = build_nodes(DIRECTIONAL)
+directional_solve = solve_nodes(directional_nodes)
+
+
+@functools.cache
+def solve(code, depth):
+	if depth == 0:
+		return len(code)
 	
-	prev = 'A'
-	for key in code:
-		solutions.append(list(map(lambda x: x + ['A'], solve[prev][key])))
-		prev = key
+	result = 0
+	prev = "A"
+	for cur in code:
+		solution = directional_solve if prev in directional_solve and cur in directional_solve else numeric_solve
+		result += solve(solution[prev][cur], depth-1)
+		prev = cur
 
-	options = []
-	for i in range(len(solutions)):
-		new_options = []
-		for j in range(len(solutions[i])):
-			if i == 0:
-				new_options.append(solutions[i][j])
-			else:
-				for k in range(len(options)):
-					new_options.append(options[k] + solutions[i][j])
-
-
-		options = new_options
-
-	return options
-
-def solve(start_code, solves):
-	codes = [start_code]
-	for solve in solves:
-		new_codes = []
-		for code in codes:
-			new_codes += solve_code(code, solve)
-
-		codes = new_codes
-
-
-	return sorted(codes, key = lambda x: len(x))[0]
+	return result
 
 def main():
 	t1 = time.time()
 	codes = load_input('input.txt')
 
-	numeric_nodes = build_nodes(NUMERIC)
-	numeric_solve = solve_nodes(numeric_nodes)
-	directional_nodes = build_nodes(DIRECTIONAL)
-	directional_solve = solve_nodes(directional_nodes)
 
 	sum_complexity = 0
-	solves = [numeric_solve]
-	for i in range(0, 2 if get_part() == 1 else 25):
-		solves.append(directional_solve)
+	depth = 3 if get_part() == 1 else 26
 
 	print(f'running part {get_part()}')
-	print(f'handling {len(solves)} solves')
+	print(f'handling {depth} solves')
 	for code in codes:	
 		numeric_part = parse_numeric_code(code)
-		shortest_seq = solve(code, solves)
+		shortest_seq = solve(code, depth)
 	
-		print(code, numeric_part, len(shortest_seq))
+		print(code, numeric_part, shortest_seq)
 
-		sum_complexity += (numeric_part * len(shortest_seq)) 
+		sum_complexity += (numeric_part * shortest_seq)
 
 	print('total complexity', sum_complexity)
 
