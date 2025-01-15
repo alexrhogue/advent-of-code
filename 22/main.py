@@ -44,6 +44,40 @@ def calc(nums, sims):
 
 	return sum
 
+def calc_seq(nums, sims):
+	f = {}
+
+	for i in range(len(nums)):
+		result = nums[i]
+		seq = []
+		for j in range(sims):
+			next = step(result)
+			next_price = next % 10
+
+			seq.append(next_price - (result % 10))
+
+			if j > 2:
+				s = tuple(seq[j-3: j+1])
+				if i == 0:
+					if s in f:
+						f[s][i] = max(f[s][i], next_price)
+					else:
+						f[s] = [next_price]
+
+				elif s in f:
+					if len(f[s]) > i:
+						f[s][i] = max(f[s][i], next_price)
+					else:
+						f[s].append(next_price)
+
+			result = next
+
+	highest_price = 0
+	for key in f:
+		highest_price = max(highest_price, sum(f[key]))
+
+	return highest_price
+
 def main():
 	t1 = time.time()
 	input = load_input('input.txt')
@@ -53,10 +87,11 @@ def main():
 
 	if get_part() == 1:
 		sum = calc(input, sims)
+		print(f'sum of input after {sims} simulations: {sum}')
 	else:
-		print('foo')
+		banana = calc_seq(input, sims)
+		print(f'num bananas after {sims} simulations: {banana}')
 
-	print(f'sum of input after {sims} simulations: {sum}')
 	print(f"part {get_part()}: took {round(time.time()-t1, 5)}s")
 if __name__=='__main__':
 	main()
