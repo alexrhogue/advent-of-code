@@ -57,24 +57,18 @@ def calc_seq(nums, sims):
 			seq.append(next_price - (result % 10))
 
 			if j > 2:
-				s = tuple(seq[j-3: j+1])
-				if i == 0:
-					if s in f:
-						f[s][i] = max(f[s][i], next_price)
-					else:
-						f[s] = [next_price]
-
-				elif s in f:
-					if len(f[s]) > i:
-						f[s][i] = max(f[s][i], next_price)
-					else:
-						f[s].append(next_price)
+				s = tuple(seq[j-3: j+1])	
+				if s not in f:
+						f[s] = (i, [next_price])
+				else:
+					if f[s][0] != i:
+						f[s] = (i, f[s][1] + [next_price])
 
 			result = next
 
 	highest_price = 0
 	for key in f:
-		highest_price = max(highest_price, sum(f[key]))
+		highest_price = max(highest_price, sum(f[key][1]))
 
 	return highest_price
 
