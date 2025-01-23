@@ -55,8 +55,61 @@ def find_network(graph):
 
 	return networks
 
+def common_neighbors(nodes, graph):
+	count = {}
+	for node in nodes:
+		for n in graph[node]:
+			if n in count:
+				count[n] += 1
+			else:
+				count[n] = 1
+
+	common = []
+	for key in count:
+		if count[key] == len(nodes):
+			common.append(key)
+
+	return common
+
 def find_largest_network(graph):
-	return []
+
+	queue = []
+
+	for a in graph:
+		for b in graph[a]:
+			queue.append(sorted([a,b]))
+
+	largest_network = []
+	visited = set({})
+	
+	while len(queue) > 0:
+		print(len(queue))
+		nodes = queue.pop()		
+		t_nodes = tuple(nodes)
+		if t_nodes in visited:
+			print("skipping")
+			continue
+		
+		visited.add(t_nodes)
+		neighbors =  common_neighbors(nodes, graph)
+
+		if len(neighbors) == 0:
+			if len(nodes) > len(largest_network):
+				print('new largest network', nodes)
+				largest_network = nodes
+			continue
+
+
+		#print('nodes', nodes)
+		#print('common neighbors', neighbors)
+
+		for neighbor in neighbors:
+			queue.append(sorted(nodes + [neighbor]))
+
+
+
+
+	return largest_network
 
 def main():
 	t1 = time.time()
@@ -70,8 +123,8 @@ def main():
 		print(f'num networks: {len(networks)}')
 	else:
 		network = find_largest_network(graph)
-		pprint.pprint(network)
-		print(f'largest network: {len(network)}')
+		print(f'largest network: {network}')
+		print(f'password: {",".join(network)}')
 
 	print(f"part {get_part()}: took {round(time.time()-t1, 5)}s")
 if __name__=='__main__':
