@@ -43,19 +43,19 @@ fn pt_two() -> Result<()> {
 
         let amt: i32 = amt_str.parse()?;
 
-        let overflow = amt / 100;
-        result += overflow;
+        let laps = amt / 100;
+        result += laps;
 
-        let prev = cur;
-        cur = (cur + dir * amt).rem_euclid(100);
-
-        if prev != 0 {
-            match dir {
-                1 if cur < prev => result += 1,
-                -1 if cur > prev || cur == 0 => result += 1,
+        if cur != 0 {
+            let steps = amt % 100;
+            match dir_str {
+                "R" if cur + steps >= 100 => result += 1,
+                "L" if steps >= cur => result += 1,
                 _ => {}
             }
         }
+
+        cur = (cur + dir * amt).rem_euclid(100);
 
         // println!("{prev} -> {dir} {amt} -> {cur} = {result} (+{overflow})");
     }
