@@ -1,0 +1,13 @@
+[
+    {
+      "key": "f5",
+      "command": "rust-analyzer.run",
+      "when": "editorLangId == 'rust'"
+    },
+    {
+      "key": "ctrl+f5",
+      "command": "rust-analyzer.debug",
+      "when": "editorLangId == 'rust'"
+    }
+  ]
+  
